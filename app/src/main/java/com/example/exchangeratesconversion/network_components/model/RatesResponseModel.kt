@@ -7,7 +7,7 @@ data class RatesResponseModel(
     val documentation: String,
     val provider: String,
     @SerializedName("rates")
-    val rates: RatesModel?= null,
+    val rates: RatesModel? = null,
     val result: String,
     val terms_of_use: String,
     val time_eol_unix: Int,

@@ -1,6 +1,6 @@
 package com.example.exchangeratesconversion.network_components.model
 
-data class RatesModel (
+data class RatesModel(
     val AED: Double? = null,
     val AFN: Double? = null,
     val ALL: Double? = null,

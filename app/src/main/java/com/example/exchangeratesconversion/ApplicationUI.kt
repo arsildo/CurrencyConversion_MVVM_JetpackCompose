@@ -7,8 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -28,14 +26,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.exchangeratesconversion.ui.theme.Purple200
 import com.example.exchangeratesconversion.ui.theme.Purple500
 import com.example.exchangeratesconversion.view_model.RatesViewModel
 import com.example.exchangeratesconversion.view_model.ViewState
 
 
 @Composable
-fun AppliactionUI(
+fun ApplicationUI(
     viewModel: RatesViewModel = hiltViewModel()
 ) {
 

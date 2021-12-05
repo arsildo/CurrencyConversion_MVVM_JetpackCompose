@@ -10,7 +10,7 @@ interface UseCaseRetriever {
 
 class RatesUseCase @Inject constructor(
     private val repository: ImplementedRatesRepository
-):UseCaseRetriever {
+) : UseCaseRetriever {
     override suspend fun invoke(base: String): RatesResponseModel {
         return repository.getAllRates(base)
     }
