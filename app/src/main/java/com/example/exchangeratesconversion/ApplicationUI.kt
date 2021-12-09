@@ -1,31 +1,24 @@
 package com.example.exchangeratesconversion
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.exchangeratesconversion.ui.theme.Black
+import com.example.exchangeratesconversion.ui.theme.Grey
 import com.example.exchangeratesconversion.ui.theme.Purple500
 import com.example.exchangeratesconversion.view_model.RatesViewModel
 import com.example.exchangeratesconversion.view_model.ViewState
@@ -41,6 +34,7 @@ fun ApplicationUI(
     }
 
     val viewState by remember { viewModel.viewState }
+    var amountEntered by remember { mutableStateOf("") }
     when (val state = viewState) {
         is ViewState.LoadingState -> {
             Column(
@@ -55,48 +49,90 @@ fun ApplicationUI(
             }
         }
         is ViewState.SuccessState -> {
-            val lastTimeUpdated by remember { viewModel.lastTimeUpdated }
             Column(
-                modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier.fillMaxSize().background(Color.White).padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Text(
-                    "Convert",
-                    color = Color.Black,
+                    text = "Convert",
                     fontSize = 32.sp,
+                    color = Black,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(8.dp)
                 )
+
+                Spacer(Modifier.height(32.dp))
+
+
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Spacer(modifier = Modifier.weight(.4f))
+
+                    Text(
+                        text = "from",
+                        fontSize = 16.sp,
+                        color = Grey,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(.3f)
+                    )
+                    Text(
+                        text = "to",
+                        fontSize = 16.sp,
+                        color = Grey,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(.3f)
+                    )
+                }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    ExpandableCards("EUR")
-                    var amountEntered by remember { mutableStateOf("100") }
-                    ExchangeBar(amountEntered) {
-                        amountEntered = it
-                    }
+                    OutlinedTextField(
+                        value = amountEntered,
+                        onValueChange = { amountEntered = it },
+                        label = {
+                            Text(
+                                "Amount",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize= 16.sp,
+                                color = Black,
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Black,
+                            cursorColor = Black,
+                            unfocusedIndicatorColor = Black,
+                            focusedIndicatorColor = Black,
+                        ),
+                        modifier = Modifier.weight(.4f)
+                    )
+
+                    Text(
+                        text = "EUR",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(.3f)
+                    )
+                    Text(
+                        text = "USD",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(.3f)
+                    )
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    ExpandableCards("USD")
-                    var amountReturned by remember { mutableStateOf("121") }
-                    ExchangeBar(amountReturned) {
-                        amountReturned = it
-                    }
-                }
+
+                Spacer(Modifier.height(16.dp))
 
                 Text(
-                    lastTimeUpdated,
-                    color = Color.Black,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(8.dp)
+                    text = "$amountEntered XX = 32 XX ",
+                    fontSize = 32.sp,
+                    color = Black,
                 )
+
 
             }
 
@@ -114,89 +150,5 @@ fun ApplicationUI(
         }
     }
 
-
-}
-
-@Composable
-fun ExchangeBar(amount: String, onValueChanged: (String) -> Unit) {
-    OutlinedTextField(
-        value = amount,
-        onValueChange = { onValueChanged(it) },
-        textStyle = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center),
-        singleLine = true,
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Purple500,
-            unfocusedBorderColor = Purple500
-        ),
-        shape = RoundedCornerShape(8.dp),
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth(.4f).padding(8.dp)
-    )
-}
-
-//TODO Complete
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ExpandableCards(
-    text: String
-) {
-    var expandedState by remember { mutableStateOf(false) }
-    var stroke by remember { mutableStateOf(1) }
-    val rotationState by animateFloatAsState(
-        targetValue = if (expandedState) 180f else 0f
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(.3f)
-            .animateContentSize(
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearOutSlowInEasing
-                )
-            ),
-        backgroundColor = Color.White,
-        border = BorderStroke(stroke.dp, Purple500),
-        shape = RoundedCornerShape(8.dp),
-        onClick = {
-            expandedState = !expandedState
-            stroke = if (expandedState) 2 else 1
-        }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier
-                        .weight(6f),
-                    text = text,
-                    textAlign = TextAlign.Center,
-                    fontSize = 18.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                IconButton(
-                    modifier = Modifier
-                        .weight(1f)
-                        .alpha(ContentAlpha.medium)
-                        .rotate(rotationState),
-                    onClick = {
-                        expandedState = !expandedState
-                        stroke = if (expandedState) 2 else 1
-                    }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Drop-Down Arrow"
-                    )
-                }
-            }
-            if (expandedState) {
-                Text("TODO") //TODO
-            }
-        }
-    }
 
 }
