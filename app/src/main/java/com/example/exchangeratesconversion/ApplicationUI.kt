@@ -1,12 +1,13 @@
 package com.example.exchangeratesconversion
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,9 @@ fun ApplicationUI(
 
     val viewState by remember { viewModel.viewState }
     var amountEntered by remember { mutableStateOf("") }
+    var fromSelected by remember { mutableStateOf("EUR") }
+    var toSelected by remember { mutableStateOf("USD") }
+    val lastTimeUpdated by remember { viewModel.lastTimeUpdated }
     when (val state = viewState) {
         is ViewState.LoadingState -> {
             Column(
@@ -53,17 +57,13 @@ fun ApplicationUI(
                 modifier = Modifier.fillMaxSize().background(Color.White).padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(
                     text = "Convert",
                     fontSize = 32.sp,
                     color = Black,
                     fontWeight = FontWeight.Bold,
                 )
-
                 Spacer(Modifier.height(32.dp))
-
-
                 Row(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.End
@@ -85,7 +85,6 @@ fun ApplicationUI(
                         modifier = Modifier.weight(.3f)
                     )
                 }
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
@@ -97,7 +96,7 @@ fun ApplicationUI(
                             Text(
                                 "Amount",
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize= 16.sp,
+                                fontSize = 16.sp,
                                 color = Black,
                             )
                         },
@@ -108,32 +107,52 @@ fun ApplicationUI(
                             unfocusedIndicatorColor = Black,
                             focusedIndicatorColor = Black,
                         ),
-                        modifier = Modifier.weight(.4f)
+                        modifier = Modifier.weight(.4f).padding(bottom = 8.dp)
                     )
 
-                    Text(
-                        text = "EUR",
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(.3f)
-                    )
-                    Text(
-                        text = "USD",
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(.3f)
-                    )
+                    val list = listOfCurrencies()
+                    var selectedOptionText by remember { mutableStateOf(list[0]) }
+
+                    DropdownMenu(
+                        listOfCurrencies(),
+                        modifier = Modifier.weight(.3f),
+                    ) {
+                        selectedOptionText = list[it]
+                        fromSelected = selectedOptionText
+                    }
+                    DropdownMenu(
+                        listOfCurrencies(),
+                        modifier = Modifier.weight(.3f),
+                    ) {
+                        selectedOptionText = list[it]
+                        toSelected = selectedOptionText
+                    }
+
                 }
-
                 Spacer(Modifier.height(16.dp))
+                Text(
+                    text = amountEntered,
+                    fontSize = 32.sp,
+                    color = Black,
+                )
 
                 Text(
-                    text = "$amountEntered XX = 32 XX ",
+                    text = fromSelected,
+                    fontSize = 32.sp,
+                    color = Black,
+                )
+                Text(
+                    text = toSelected,
                     fontSize = 32.sp,
                     color = Black,
                 )
 
 
+                Text(
+                    text = lastTimeUpdated!!,
+                    fontSize = 16.sp,
+                    color = Black,
+                )
             }
 
         }
@@ -150,5 +169,84 @@ fun ApplicationUI(
         }
     }
 
+}
 
+
+@Composable
+fun DropdownMenu(
+    list: List<String>,
+    modifier: Modifier,
+    onSelected: (Int) -> Unit,
+) {
+    var selectedIndex by remember { mutableStateOf(0) }
+    var expand by remember { mutableStateOf(false) }
+    var stroke by remember { mutableStateOf(1) }
+    Box(
+        modifier
+            .padding(8.dp)
+            .border(
+                border = BorderStroke(stroke.dp, Black),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .clickable {
+                expand = true
+                stroke = if (expand) 2 else 1
+            },
+        contentAlignment = Alignment.Center
+    ) {
+
+        Text(
+            text = list[selectedIndex],
+            color = Black,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+        )
+
+        DropdownMenu(
+            expanded = expand,
+            onDismissRequest = {
+                expand = false
+
+            },
+            modifier = Modifier
+                .background(Color.White)
+                .padding(2.dp)
+                .fillMaxWidth(.2f)
+        ) {
+            list.forEachIndexed { index, name ->
+                DropdownMenuItem(
+                    onClick = {
+                        selectedIndex = index
+                        expand = false
+                        stroke = if (expand) 2 else 1
+                        onSelected(selectedIndex)
+                    }
+                ) {
+                    Text(
+                        text = name,
+                        color = Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+
+fun listOfCurrencies(): List<String> {
+    return listOf(
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "RUB",
+        "USD",
+    )
 }
