@@ -30,15 +30,12 @@ fun ApplicationUI(
     viewModel: RatesViewModel = hiltViewModel()
 ) {
 
-    DisposableEffect(key1 = Unit) {
-        onDispose { }
-    }
-
     val viewState by remember { viewModel.viewState }
-    var amountEntered by remember { mutableStateOf("") }
-    var fromSelected by remember { mutableStateOf("EUR") }
-    var toSelected by remember { mutableStateOf("USD") }
-    val lastTimeUpdated by remember { viewModel.lastTimeUpdated }
+    var amountEntered by remember { viewModel.amount }
+    var converted by remember { viewModel.conversion }
+    var fromCurrency by remember { viewModel.fromCurrency }
+    var toCurrency by remember { viewModel.toCurrency }
+
     when (val state = viewState) {
         is ViewState.LoadingState -> {
             Column(
@@ -91,7 +88,14 @@ fun ApplicationUI(
                 ) {
                     OutlinedTextField(
                         value = amountEntered,
-                        onValueChange = { amountEntered = it },
+                        onValueChange = {
+                            amountEntered = it
+                            if (amountEntered.isNotEmpty()) {
+                                viewModel.convert(fromCurrency, toCurrency, amountEntered)
+                            } else {
+                                converted = "0"
+                            }
+                        },
                         label = {
                             Text(
                                 "Amount",
@@ -110,49 +114,36 @@ fun ApplicationUI(
                         modifier = Modifier.weight(.4f).padding(bottom = 8.dp)
                     )
 
-                    val list = listOfCurrencies()
-                    var selectedOptionText by remember { mutableStateOf(list[0]) }
+                    val list = viewModel.listOfCurrencies()
+                    var selected by remember { mutableStateOf(list[3]) }
 
                     DropdownMenu(
-                        listOfCurrencies(),
+                        list,
+                        fromCurrency,
                         modifier = Modifier.weight(.3f),
                     ) {
-                        selectedOptionText = list[it]
-                        fromSelected = selectedOptionText
+                        selected = list[it]
+                        fromCurrency = selected
+                        viewModel.convert(fromCurrency, toCurrency, amountEntered)
                     }
                     DropdownMenu(
-                        listOfCurrencies(),
+                        list,
+                        toCurrency,
                         modifier = Modifier.weight(.3f),
                     ) {
-                        selectedOptionText = list[it]
-                        toSelected = selectedOptionText
+                        selected = list[it]
+                        toCurrency = selected
+                        viewModel.convert(fromCurrency, toCurrency, amountEntered)
                     }
 
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = amountEntered,
+                    text = "$amountEntered $fromCurrency = $converted $toCurrency",
                     fontSize = 32.sp,
                     color = Black,
                 )
 
-                Text(
-                    text = fromSelected,
-                    fontSize = 32.sp,
-                    color = Black,
-                )
-                Text(
-                    text = toSelected,
-                    fontSize = 32.sp,
-                    color = Black,
-                )
-
-
-                Text(
-                    text = lastTimeUpdated!!,
-                    fontSize = 16.sp,
-                    color = Black,
-                )
             }
 
         }
@@ -175,6 +166,7 @@ fun ApplicationUI(
 @Composable
 fun DropdownMenu(
     list: List<String>,
+    header: String,
     modifier: Modifier,
     onSelected: (Int) -> Unit,
 ) {
@@ -196,7 +188,7 @@ fun DropdownMenu(
     ) {
 
         Text(
-            text = list[selectedIndex],
+            text = header,
             color = Black,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
@@ -205,10 +197,7 @@ fun DropdownMenu(
 
         DropdownMenu(
             expanded = expand,
-            onDismissRequest = {
-                expand = false
-
-            },
+            onDismissRequest = { expand = false },
             modifier = Modifier
                 .background(Color.White)
                 .padding(2.dp)
@@ -234,19 +223,4 @@ fun DropdownMenu(
         }
 
     }
-}
-
-
-fun listOfCurrencies(): List<String> {
-    return listOf(
-        "AUD",
-        "CAD",
-        "CHF",
-        "EUR",
-        "GBP",
-        "JPY",
-        "NZD",
-        "RUB",
-        "USD",
-    )
 }

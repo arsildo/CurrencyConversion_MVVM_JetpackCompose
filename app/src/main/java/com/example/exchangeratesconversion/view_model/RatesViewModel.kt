@@ -10,6 +10,7 @@ import com.example.exchangeratesconversion.use_case.RatesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.round
 
 @HiltViewModel
 class RatesViewModel @Inject constructor(
@@ -20,27 +21,42 @@ class RatesViewModel @Inject constructor(
     private val _viewState: MutableState<ViewState> = mutableStateOf(ViewState.LoadingState)
     val viewState: State<ViewState> = _viewState
 
-    // List of Rates
-    private val _currentRates: MutableState<RatesModel?> = mutableStateOf(RatesModel())
-    var currentRates: State<RatesModel?> = _currentRates
 
-    var lastTimeUpdated: MutableState<String?> = mutableStateOf("")
+    val amount: MutableState<String> = mutableStateOf("10")
+    val fromCurrency: MutableState<String> = mutableStateOf("EUR")
+    val toCurrency: MutableState<String> = mutableStateOf("USD")
+    val conversion: MutableState<String> = mutableStateOf("")
 
     init {
         viewModelScope.launch {
             _viewState.value = ViewState.LoadingState
             try {
-                val query = useCase("EUR")
-                _viewState.value = ViewState.SuccessState(query)
-                _currentRates.value = query.rates
-                lastTimeUpdated.value = query.time_last_update_utc
-                currentRates
+                _viewState.value = ViewState.SuccessState(useCase("EUR"))
+                convert(fromCurrency.value, toCurrency.value, amount.value)
             } catch (e: Exception) {
                 _viewState.value = ViewState.FailedState("Error")
             }
         }
     }
-    fun getRate(currency: String, rate: RatesModel) = when (currency) {
+
+    fun convert(
+        from: String,
+        to: String,
+        amount: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val queryFrom = useCase(from)
+                val requestedRate = getRequestedRate(to, queryFrom.rates!!)
+                val amountEntered = amount.toFloat()
+                conversion.value = "${(amountEntered * requestedRate!!).round(4)}"
+            } catch (e: Exception) {
+                _viewState.value = ViewState.FailedState("Error")
+            }
+        }
+    }
+
+    private fun getRequestedRate(currency: String, rate: RatesModel) = when (currency) {
         "AUD" -> rate.AUD
         "CAD" -> rate.CAD
         "CHF" -> rate.CHF
@@ -51,6 +67,26 @@ class RatesViewModel @Inject constructor(
         "RUB" -> rate.RUB
         "USD" -> rate.USD
         else -> null
+    }
+
+    fun listOfCurrencies(): List<String> {
+        return listOf(
+            "AUD",
+            "CAD",
+            "CHF",
+            "EUR",
+            "GBP",
+            "JPY",
+            "NZD",
+            "RUB",
+            "USD",
+        )
+    }
+
+    private fun Double.round(decimals: Int): Double {
+        var multiplier = 1.0
+        repeat(decimals) { multiplier *= 10 }
+        return round(this * multiplier) / multiplier
     }
 
 
